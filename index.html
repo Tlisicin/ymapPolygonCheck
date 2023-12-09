@@ -1,0 +1,125 @@
+<html lang="en">
+<head>
+    <!-- Подключаем API -->
+    <!-- Подробнее https://tech.yandex.ru/maps/doc/jsapi/2.1/dg/concepts/load-docpage/ -->
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=4792892d-f520-456f-a059-d7c2e409b6ef&lang=ru_RU" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://yastatic.net/s3/mapsapi-jslibs/area/0.0.1/util.calculateArea.min.js" type="text/javascript"></script>
+
+</head>
+<body>
+
+    
+ 
+<!-- Создаём контейнер для карты -->
+<div id="map" style="width: 600px; height: 400px"></div>
+ 
+<!-- Создаём карту -->
+<script type="text/javascript">
+    // Функция ymaps.ready() будет вызвана, когда
+    // загрузятся все компоненты API, а также когда будет готово DOM-дерево.
+    ymaps.ready(init);
+ 
+    function init() {
+        // Создание карты.
+        // https://tech.yandex.ru/maps/doc/jsapi/2.1/dg/concepts/map-docpage/
+        var myMap = new ymaps.Map("map", {
+            // Координаты центра карты.
+            // Порядок по умолчнию: «широта, долгота».
+            center: [55.76, 37.64],
+            // Уровень масштабирования. Допустимые значения:
+            // от 0 (весь мир) до 19.
+            zoom: 14,
+            // Элементы управления
+            // https://tech.yandex.ru/maps/doc/jsapi/2.1/dg/concepts/controls/standard-docpage/
+            controls: [
+ 
+                'zoomControl', // Ползунок масштаба
+                'rulerControl', // Линейка
+                'routeButtonControl', // Панель маршрутизации
+                'trafficControl', // Пробки
+                'typeSelector', // Переключатель слоев карты
+                'fullscreenControl', // Полноэкранный режим
+ 
+                // Поисковая строка
+                new ymaps.control.SearchControl({
+                    options: {
+                        // вид - поисковая строка
+                        size: 'large',
+                        // Включим возможность искать не только топонимы, но и организации.
+                        provider: 'yandex#search'
+                    }
+                })
+ 
+            ]
+        });
+ 
+        // Добавление метки
+        // https://tech.yandex.ru/maps/doc/jsapi/2.1/ref/reference/Placemark-docpage/
+        var myPlacemark = new ymaps.Placemark([55.76, 37.64], {
+            // Хинт показывается при наведении мышкой на иконку метки.
+            hintContent: 'Содержимое всплывающей подсказки',
+            // Балун откроется при клике по метке.
+            balloonContent: 'Содержимое балуна'
+        });
+
+        var width05 = 5000 / 2;
+ 
+ var startPoint = myPlacemark.geometry.getCoordinates(),
+
+     // ymaps.coordSystem.geo.solveDirectProblem - решает первую (прямую) геодезическую задачу:
+     // где мы окажемся, если выйдем из указанной точки в указанном направлении и пройдём, не сворачивая, указанное расстояние.
+     // https://tech.yandex.ru/maps/doc/jsapi/2.1/ref/reference/ICoordSystem-docpage/#method_detail__solveDirectProblem
+
+     // Вверх от центра на 250 метров
+     azimuthT = 1.570796, //вверх
+     directionT = [Math.sin(azimuthT), Math.cos(azimuthT)],
+     topPoint = ymaps.coordSystem.geo.solveDirectProblem(startPoint, directionT, width05).endPoint,
+
+     // Влево на 250 метров (координаты левой верхней вершины)
+     azimuthTL = 3.141593, // влево
+     directionTL = [Math.sin(azimuthTL), Math.cos(azimuthTL)],
+     topLeftPoint = ymaps.coordSystem.geo.solveDirectProblem(topPoint, directionTL, width05).endPoint,
+
+     // Вправо на 250 метров (координаты правой верхней вершины)
+     azimuthTR = 0, // вправо
+     directionTR = [Math.sin(azimuthTR), Math.cos(azimuthTR)],
+     topRightPoint = ymaps.coordSystem.geo.solveDirectProblem(topPoint, directionTR, width05).endPoint,
+
+     // Вниз от центра на 250 метров
+     azimuthB = -1.570796, // вниз
+     directionB = [Math.sin(azimuthB), Math.cos(azimuthB)],
+     bottomPoint = ymaps.coordSystem.geo.solveDirectProblem(startPoint, directionB, width05).endPoint,
+
+     // Влево на 250 метров (координаты левой нижней вершины)
+     azimuthBL = 3.141593, // влево
+     directionBL = [Math.sin(azimuthBL), Math.cos(azimuthBL)],
+     bottomLeftPoint = ymaps.coordSystem.geo.solveDirectProblem(bottomPoint, directionBL, width05).endPoint,
+
+     // Вправо на 250 метров (координаты правой нижней вершины)
+     azimuthBR = 0, // вправо
+     directionBR = [Math.sin(azimuthBR), Math.cos(azimuthBR)],
+     bottomRightPoint = ymaps.coordSystem.geo.solveDirectProblem(bottomPoint, directionBR, width05).endPoint;
+
+
+ // Рисуем полигон
+ // https://tech.yandex.ru/maps/doc/jsapi/2.1/ref/reference/Polygon-docpage/
+ var myPolygon = new ymaps.Polygon([
+     // Координаты внешнего контура
+     [
+         topLeftPoint,
+         topRightPoint,
+         bottomRightPoint,
+         bottomLeftPoint,
+         topLeftPoint,
+     ],
+     [] // Координаты внутреннего контура
+ ]),
+ 
+        // После того как метка была создана, добавляем её на карту.
+        myMap.geoObjects.add(myPlacemark);
+ 
+    }
+</script>
+</body>
+</html>
